@@ -5,7 +5,7 @@
 **Compiled by:** Shubham Thanage
 **Pod discussion:** Saturday 24 October, 8 PM IST
 
-**📄 Read the full report:** `https://<your-github-username>.github.io/<repo-name>/`
+**📄 Read the full report:** `https://github.com/shubhamthanage/SENTINEL-dataset-understanding.git`
 
 ---
 
