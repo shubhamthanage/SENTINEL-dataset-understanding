@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Project SENTINEL pod report: dataset overview, data dictionary, business mapping, data quality, AI/ML opportunities.">
 <title>SENTINEL Dataset Understanding Report</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -70,6 +75,10 @@ footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid va
 a{color:var(--signal)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
+<style>body{margin:0}*,*::before,*::after{box-sizing:border-box}</style>
+</head>
+<body>
+
 
 <div class="wrap">
 
@@ -742,20 +751,32 @@ a{color:var(--signal)}
 <!-- ============ 7 ============ -->
 <section id="contrib">
   <h2><span class="num">7</span>Individual contributions</h2>
-  <p>We split the tables among the pod for the first pass. Each member then presented their attributes to the whole pod on 17 October.</p>
+  <p>Before the discussion, the pod split the 18 tables and all 171 attributes into five work areas, so that every attribute had an owner. On 17 October, each member explained their attributes to the whole pod: type, business meaning, ranges, relationships and role in SENTINEL. The others then questioned them until everyone could explain every column.</p>
   <div class="tbl"><table>
-    <thead><tr><th>Member</th><th>Area explored</th><th>Explained to the pod</th></tr></thead>
+    <thead><tr><th>Member</th><th>Tables owned</th><th>Attributes</th><th>What they explored</th><th>What they explained to the pod</th><th>Report sections</th></tr></thead>
     <tbody>
-      <tr><td>Shubham Thanage</td><td>Full-dataset profiling; data quality and relationships (Section 4); consolidation of this report</td><td>Null patterns, duplicates, outliers, leakage, validation rules, privacy</td></tr>
-      <tr><td>[Member 2]</td><td>transactions, customers, merchants, devices</td><td>Core record, CRD 7.1 fields, payment mix</td></tr>
-      <tr><td>[Member 3]</td><td>features, labels, payment_outcomes</td><td>FE-01…FE-10, label delay, splits</td></tr>
-      <tr><td>[Member 4]</td><td>decision_audit, policy tables, reviewer_feedback</td><td>Rules layer, thresholds, audit trail</td></tr>
-      <tr><td>[Member 5]</td><td>documents, chunks, legacy cases, gold, DPO</td><td>LLM corpus, training stages</td></tr>
+      <tr><td>Shubham Thanage<br>(consolidator)</td><td>Cross-table quality review of all 18 tables</td><td class="n">171 (quality pass)</td><td>Profiled every row with DuckDB: nulls, duplicate keys, outliers, foreign keys, the 10 integrity checks, leakage columns, PII scan of all 39,006 documents</td><td>UPI-only device nulls, template repetition, the 05:00 IST gap, reviewer-verdict leakage, the 26 mature validation frauds, DPDP obligations</td><td>§4; consolidation and editing of §1–§7</td></tr>
+      <tr><td>[Member 2 name]</td><td>transactions, customers, merchants, devices</td><td class="n">32</td><td>The core payment record and the 14 CRD §7.1 fields; channel mix; amount distribution; paise vs rupee fields; timezone handling</td><td>What one record means in the business; why amount alone is weak; how customer, merchant and device link to each transaction</td><td>§1; §2 core tables</td></tr>
+      <tr><td>[Member 3 name]</td><td>features, labels, payment_outcomes</td><td class="n">34</td><td>FE-01…FE-10 definitions; the 60-day label delay; time-based splits; fraud rate per signal</td><td>Point-in-time features; why night, failures and shared devices raise fraud about 10×; why outcome status leaks</td><td>§2 features and labels; §3 insights; §5 inputs and targets</td></tr>
+      <tr><td>[Member 4 name]</td><td>decision_audit, threshold_sets, hard_rules, list_entries, config_changes, reviewer_feedback</td><td class="n">55</td><td>How a probability becomes ALLOW / REVIEW / BLOCK; hard-rule overrides; the audit trail; the reviewer feedback loop</td><td>How the rules layer and audit log meet CRD objectives, RBI and auditor needs; real-time vs batch flow</td><td>§2 policy and audit tables; §3 requirement mapping; §5 real-time vs batch</td></tr>
+      <tr><td>[Member 5 name]</td><td>documents, document_chunks, legacy_cases, gold_explanations, preference_pairs</td><td class="n">50</td><td>The LLM corpus: document kinds, CPT eligibility, gold and DPO targets, deduplication status</td><td>How CPT, SFT, DPO and retrieval use the text; why repetitive targets are a risk</td><td>§2 text and training tables; §5 ML approaches</td></tr>
     </tbody>
   </table></div>
+  <p><b>Total: 32 + 34 + 55 + 50 = 171 attributes</b>, every one assigned and explained.</p>
+  <h3>How the report was consolidated</h3>
+  <ol>
+    <li><b>Split the work:</b> each member took one work area above and profiled their tables.</li>
+    <li><b>Pod discussion (17 October, 8 PM IST):</b> each member presented their attributes. The pod agreed on the decisions, assumptions and open questions recorded in Section 6.</li>
+    <li><b>Consolidation:</b> Shubham Thanage merged the five write-ups into one report. He used a single data dictionary format, re-checked every figure against the full dataset, and added the cross-table quality review.</li>
+    <li><b>Review:</b> the pod read the consolidated draft and agreed on the final version.</li>
+    <li><b>Submission:</b> every member submits this same report link.</li>
+  </ol>
 </section>
 
 <footer>
   All figures were computed from the full <code>sentinel_data</code> tables (DuckDB, every row). Client facts are from CRD PV-RISK-CRD-2026-014. The dataset is synthetic. Scores, decisions and latencies in it are simulated and are not model performance.
 </footer>
 </div>
+
+</body>
+</html>
