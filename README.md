@@ -9,12 +9,11 @@
 
 | How to open it | Link |
 |---|---|
-| Live page (GitHub Pages) | [shubhamthanage.github.io/SENTINEL-dataset-understanding](https://shubhamthanage.github.io/SENTINEL-dataset-understanding/) |
 | Rendered preview of the HTML file | [Open formatted report](https://htmlpreview.github.io/?https://github.com/shubhamthanage/SENTINEL-dataset-understanding/blob/main/SENTINEL_Pod_Report.html) |
 | GitHub repository | [github.com/shubhamthanage/SENTINEL-dataset-understanding](https://github.com/shubhamthanage/SENTINEL-dataset-understanding) |
-| Source file in this repo | [SENTINEL_Pod_Report.html](SENTINEL_Pod_Report.html) (same content as [index.html](index.html)) |
+| Source file in this repo | [SENTINEL_Pod_Report.html](SENTINEL_Pod_Report.html) |
 
-> GitHub shows `.html` files as source code. Use one of the first two links to see the formatted report. The [individual contributions](#individual-contributions) and [consolidation process](#how-the-report-was-consolidated) are also reproduced below, so they can be reviewed from this page directly.
+> GitHub shows `.html` files as source code. Use the preview link to see the formatted report. The [individual contributions](#individual-contributions) and [consolidation process](#how-the-report-was-consolidated) are also reproduced below, so they can be reviewed from this page directly.
 
 ---
 
@@ -96,7 +95,6 @@ Before the discussion, the pod split the 18 tables and all 171 attributes into f
 | File | Description |
 |---|---|
 | `SENTINEL_Pod_Report.html` | The full consolidated pod report |
-| `index.html` | Same report, served as the GitHub Pages home page |
 | `README.md` | This summary, including individual contributions |
 
 ## Method
