@@ -3,7 +3,7 @@
 **Pod task:** Dataset Understanding, Attribute Analysis and Data Exploration
 **Client:** PayVista Payments Pvt. Ltd. (CRD PV-RISK-CRD-2026-014)
 **Compiled by:** Shubham Thanage
-**Pod discussion:** Saturday 17 October, 8 PM IST
+**Pod discussion:** Saturday 24 October, 8 PM IST
 
 **📄 Read the full report:** `https://<your-github-username>.github.io/<repo-name>/`
 
