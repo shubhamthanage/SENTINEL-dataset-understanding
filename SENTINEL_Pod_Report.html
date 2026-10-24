@@ -1,0 +1,761 @@
+<title>SENTINEL Dataset Understanding Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column (report), wide tables scroll inside their own frames; a sticky contents strip on wide screens. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --ink:#18202b; --muted:#5b6574; --rule:#dde1e7;
+  --accent:#b4530b; --accent-soft:#fbeee2; --signal:#1f5f8b; --signal-soft:#e6f0f7;
+  --ok:#2f7a4b; --warn:#a15c00; --bad:#b0302a;
+  --display:"Newsreader",Georgia,"Times New Roman",serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --paper:#181d25; --ink:#e6e9ee; --muted:#9aa3b0; --rule:#2c333e;
+  --accent:#f0954a; --accent-soft:#3a2516; --signal:#7cb8e3; --signal-soft:#1b2a37;
+  --ok:#6cc790; --warn:#e3a54a; --bad:#ef7a72; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --paper:#181d25; --ink:#e6e9ee; --muted:#9aa3b0; --rule:#2c333e;
+  --accent:#f0954a; --accent-soft:#3a2516; --signal:#7cb8e3; --signal-soft:#1b2a37;
+  --ok:#6cc790; --warn:#e3a54a; --bad:#ef7a72; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.cover{display:grid;gap:14px;padding-block:8px 28px;border-bottom:2px solid var(--ink);margin-bottom:28px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(30px,5vw,46px);font-weight:600}
+h2{font-size:28px;font-weight:600;padding-top:8px}
+h3{font-size:20px;font-weight:600;margin-top:26px}
+p{margin:0;max-width:72ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;color:var(--muted);font-size:14px}
+.meta b{color:var(--ink);font-weight:600}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin-bottom:36px}
+nav.toc a{color:var(--signal);text-decoration:none;border-bottom:1px solid transparent}
+nav.toc a:hover,nav.toc a:focus-visible{border-bottom-color:var(--signal)}
+section{display:grid;gap:14px;padding-block:28px;border-top:1px solid var(--rule)}
+section:first-of-type{border-top:0}
+.num{font-family:var(--mono);color:var(--accent);font-size:15px;margin-right:10px;font-weight:500}
+ul,ol{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--signal-soft);color:var(--ink);padding:1px 5px;border-radius:3px;word-break:break-word}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:grid;gap:2px}
+.stat .v{font-family:var(--display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .l{font-size:13px;color:var(--muted)}
+.tbl{overflow-x:auto;background:var(--paper);border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--rule)}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;background:var(--bg);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td.n{text-align:right;white-space:nowrap}
+.dict td:nth-child(2){font-family:var(--mono);font-size:12px;color:var(--signal);white-space:nowrap}
+.tname{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-top:22px}
+.tname h3{margin:0;font-family:var(--mono);font-size:17px;font-weight:500}
+.tname span{color:var(--muted);font-size:13.5px}
+.callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 6px 6px 0;max-width:80ch}
+.note{background:var(--signal-soft);border-left:3px solid var(--signal);padding:12px 16px;border-radius:0 6px 6px 0;max-width:80ch}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:1px 8px;border-radius:999px;white-space:nowrap;font-family:var(--body)}
+.p-bad{color:var(--bad);border:1px solid var(--bad)}
+.p-warn{color:var(--warn);border:1px solid var(--warn)}
+.p-ok{color:var(--ok);border:1px solid var(--ok)}
+.p-info{color:var(--signal);border:1px solid var(--signal)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.cols > div{min-width:0;display:grid;gap:8px;align-content:start}
+.diagram{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;overflow-x:auto}
+.diagram pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.5;color:var(--ink)}
+footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--rule);padding-top:16px}
+a{color:var(--signal)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">Pod task · Dataset understanding, attribute analysis and data exploration</div>
+  <h1>Project SENTINEL: Dataset Understanding Report</h1>
+  <p>A consolidated pod report on the synthetic PayVista dataset that SENTINEL-LM will be trained, validated and tested on. It covers what the data is, what every column means, how the data maps to the client requirements, where its quality issues lie, and what it means for the AI system design.</p>
+  <div class="meta">
+    <span>Client: <b>PayVista Payments Pvt. Ltd.</b> (CRD PV-RISK-CRD-2026-014)</span>
+    <span>Pod discussion: <b>Saturday 17 October, 8 PM IST</b></span>
+    <span>Compiled by: <b>Shubham Thanage</b></span>
+    <span>Dataset: <b>sentinel_data, generator v1.0.1</b></span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <a href="#overview">1 · Dataset overview</a>
+  <a href="#dictionary">2 · Data dictionary</a>
+  <a href="#business">3 · Business mapping</a>
+  <a href="#quality">4 · Data quality</a>
+  <a href="#ai">5 · AI/ML opportunities</a>
+  <a href="#notes">6 · Discussion notes</a>
+  <a href="#contrib">7 · Individual contributions</a>
+</nav>
+
+<!-- ============ 1 ============ -->
+<section id="overview">
+  <h2><span class="num">1</span>Dataset overview</h2>
+
+  <h3>Purpose and business problem</h3>
+  <p>PayVista is an RBI-authorised payment aggregator processing about 4.2 million transactions a day. Over the last 18 months its fraud losses rose from 4.1 to 9.8 basis points. Its 340 static rules decline or review 2.3% of transactions, yet only 1 in 19 of those is fraud. Blocked customers get no explanation.</p>
+  <p>SENTINEL replaces that with an in-house LLM. For every transaction it returns three things within 250 ms at p99: a fraud probability, an <b>ALLOW / REVIEW / BLOCK</b> decision, and a plain-language reason.</p>
+  <p>This dataset is a synthetic stand-in for PayVista's real data. It has the same fields, the same 0.6% fraud rate and the same payment mix, at a smaller scale. It is meant for designing and testing the full pipeline: features, labels, training corpora, rules and audit. It cannot establish real model accuracy.</p>
+
+  <div class="stats">
+    <div class="stat"><span class="v">1,100,000</span><span class="l">transactions (1M main + 100K warmup)</span></div>
+    <div class="stat"><span class="v">0.60%</span><span class="l">fraud rate (6,600 fraud rows)</span></div>
+    <div class="stat"><span class="v">18</span><span class="l">relational tables</span></div>
+    <div class="stat"><span class="v">171</span><span class="l">attributes across all tables</span></div>
+    <div class="stat"><span class="v">39,006</span><span class="l">text documents (notes, narratives, playbooks)</span></div>
+    <div class="stat"><span class="v">25,000</span><span class="l">customers · 2,000 merchants · 100,120 devices</span></div>
+  </div>
+
+  <h3>What one record represents</h3>
+  <p>The core record is <b>one authorisation attempt</b>: a payer (customer) tries to pay a merchant at a specific moment, through a channel (UPI, card, wallet or net banking), possibly from a known device. This includes attempts that later fail, so it is an authorisation history, not a settlement ledger.</p>
+  <p>Around that record sit:</p>
+  <ul>
+    <li>what happened to the payment (outcome)</li>
+    <li>whether it was later confirmed as fraud (label, available 60 days later)</li>
+    <li>the engineered risk signals known at that instant (features)</li>
+    <li>what the system decided (decision audit)</li>
+    <li>any investigator note or chargeback narrative written about it</li>
+  </ul>
+
+  <h3>Time coverage and splits</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Split</th><th>Period</th><th>Rows</th><th>Fraud</th><th>Fraud rate</th><th>Labels mature by next split</th></tr></thead>
+    <tbody>
+      <tr><td>warmup</td><td>Oct–Dec 2024</td><td class="n">100,000</td><td class="n">600</td><td class="n">0.60%</td><td>Used only to build history; never a training target</td></tr>
+      <tr><td>train</td><td>Jan–Oct 2025</td><td class="n">714,745</td><td class="n">4,236</td><td class="n">0.59%</td><td class="n">571,505</td></tr>
+      <tr><td>validation</td><td>Nov–Dec 2025</td><td class="n">144,803</td><td class="n">928</td><td class="n">0.64%</td><td class="n">2,903 (26 fraud)</td></tr>
+      <tr><td>holdout</td><td>Jan–Feb 2026</td><td class="n">140,452</td><td class="n">836</td><td class="n">0.60%</td><td>All (acceptance test set)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Legacy case archive: 2,000 closed cases from 2021–2024, which supply older narratives. Dataset snapshot date: 1 May 2026.</p>
+
+  <h3>Types of data available</h3>
+  <div class="cols">
+    <div><b>Structured / tabular</b><p>Transactions, customers, merchants, devices, outcomes, labels, features, decisions, rules and thresholds. Columns are integers, decimals, booleans, categoricals, timestamps and hashed IDs.</p></div>
+    <div><b>Semi-structured (JSON)</b><p>Locations (<code>{"city","lat","lon"}</code>), reason-code arrays, rule expressions, model request and feature vectors, and document metadata.</p></div>
+    <div><b>Unstructured text</b><p>Investigator notes, chargeback narratives, playbooks, regulatory teaching exercises, guidelines and serialised transaction histories, plus LLM training files (CPT, SFT, gold, DPO).</p></div>
+  </div>
+
+  <h3>How the tables relate</h3>
+  <div class="diagram"><pre>
+                customers (25,000) ──┐            ┌── merchants (2,000)
+                       │             │            │
+                legacy_cases (2,000) │            │      devices (100,120)
+                       │             ▼            ▼            │
+                       │        ┌─────────────────────────┐    │ (nullable FK)
+                       │        │  transactions 1,100,000 │◄───┘
+                       │        └───────────┬─────────────┘
+                       │      1:1 ┌─────────┼──────────┬──────────────┬───────────────┐
+                       │          ▼         ▼          ▼              ▼               ▼
+                       │       labels   features   payment_      decision_audit   reviewer_feedback
+                       │                           outcomes      (1M, main only)  (19,376)
+                       ▼                                                          gold_explanations (8,500)
+        documents (39,006) ── document_chunks                                     preference_pairs (5,000)
+        (links to a transaction OR a legacy case OR neither)
+
+   Policy layer:  threshold_sets · hard_rules · list_entries · config_changes  (versioned config + audit)
+</pre></div>
+  <p>We checked every foreign key and found <b>no orphan rows</b>. Each transaction has exactly one label, one feature row and one outcome. Each main-period transaction has exactly one decision-audit row.</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="dictionary">
+  <h2><span class="num">2</span>Data dictionary</h2>
+  <p>Every attribute in every table is listed below. Types are taken from <code>sql/schema.sql</code>. Ranges and values come from profiling all rows with DuckDB. "SENTINEL role" says how the column is used: <b>input</b> (model feature), <b>target</b>, <b>key</b>, <b>audit</b>, <b>policy</b>, or <b>exclude</b> (must never be a model input).</p>
+  <p class="note">Every table also has an <code>is_synthetic</code> boolean, which is <code>true</code> in all rows. It marks the data as fictional so it cannot be confused with production records. It carries no signal and is not repeated in each table below.</p>
+
+  <div class="tname"><h3>transactions</h3><span>1,100,000 rows · 18 columns · one authorisation attempt</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>transaction_id</td><td>text PK</td><td>Unique reference for the attempt</td><td>TX_0000000001 – TX_0001100000</td><td>Key; joins to labels, features, outcomes, audit, documents</td></tr>
+      <tr><td>customer_id</td><td>text FK</td><td>Pseudonymised (hashed) payer</td><td>24,834 distinct payers seen; median 45 txns each, max 109</td><td>Key for behaviour history; never a raw input (would memorise individuals)</td></tr>
+      <tr><td>merchant_id</td><td>text FK</td><td>Merchant being paid</td><td>2,000 merchants</td><td>Key; source of category and location</td></tr>
+      <tr><td>device_id</td><td>text FK, nullable</td><td>Hashed device fingerprint</td><td>Null in 1.0% of rows, all of them UPI</td><td>Drives new-device and shared-device signals</td></tr>
+      <tr><td>amount_paise</td><td>bigint &gt; 0</td><td>Amount in paise; the authoritative money value</td><td>217 – 798,733,717</td><td>Input (log-scaled); used for 24h amount totals</td></tr>
+      <tr><td>transaction_amount</td><td>numeric(14,2)</td><td>Same amount in ₹ for display</td><td>₹2.17 – ₹79.87 lakh; median ₹1,251; p99 ₹25,474</td><td>Redundant with paise (matches in all rows); use one</td></tr>
+      <tr><td>payment_channel</td><td>text</td><td>Payment rail</td><td>UPI 58% · card 31% · wallet 7% · net_banking 4%</td><td>Input (categorical); matches CRD payment mix</td></tr>
+      <tr><td>merchant_category</td><td>text</td><td>MCC group of the merchant</td><td>10 groups, e.g. education, electronics, travel</td><td>Input via target encoding (FE-08); copied from merchants</td></tr>
+      <tr><td>transaction_time</td><td>timestamptz</td><td>Moment of the authorisation request</td><td>2024-10-01 → 2026-02-28; stored UTC, interpreted IST</td><td>Defines splits, night flag and velocity windows</td></tr>
+      <tr><td>customer_age</td><td>integer</td><td>Payer age from KYC</td><td>18 – 80 (schema allows 18–120)</td><td>Weak input; copied from customers, never ages over time</td></tr>
+      <tr><td>customer_location</td><td>jsonb, nullable</td><td>Payer's city and lat/lon at transaction time</td><td>16 cities; null 3.0%; differs from home city in 15.6%</td><td>Used for distance and new-city features</td></tr>
+      <tr><td>merchant_location</td><td>jsonb</td><td>Merchant's registered city and lat/lon</td><td>16 cities</td><td>Used for distance feature</td></tr>
+      <tr><td>account_age</td><td>integer ≥ 0</td><td>Days since the payer's account was created</td><td>0 – 2,249</td><td>Input; &lt; 30 days sets <code>is_new_account</code></td></tr>
+      <tr><td>previous_transactions</td><td>integer</td><td>Payer's transactions in the last 30 days (CRD 7.1)</td><td>0 – 35; median 3</td><td>Input (activity level); 0 means a cold-start risk</td></tr>
+      <tr><td>average_transaction_value</td><td>numeric, nullable</td><td>Payer's mean amount over 90 days</td><td>₹12.97 – ₹76.8 lakh; null 2.6% (no 90-day history)</td><td>Denominator of <code>amount_to_avg_ratio</code></td></tr>
+      <tr><td>failed_transactions</td><td>integer</td><td>Payer's failed attempts in the preceding 24 h</td><td>0 – 9</td><td>Input; ≥ 3 sets <code>has_recent_failures</code></td></tr>
+      <tr><td>split</td><td>text</td><td>Time-based dataset partition</td><td>warmup / train / validation / holdout</td><td>Exclude from inputs; controls the leakage boundary</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>always true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>labels</h3><span>1,100,000 rows · 7 columns · ground truth</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>transaction_id</td><td>text PK/FK</td><td>Transaction being labelled</td><td>1:1 with transactions</td><td>Key</td></tr>
+      <tr><td>fraud_label</td><td>smallint 0/1</td><td>1 = confirmed fraud, 0 = genuine</td><td>6,600 ones (0.60%)</td><td><b>Target</b></td></tr>
+      <tr><td>label_source</td><td>text</td><td>How the label was decided</td><td>mature_no_fraud 1,093,400 · investigator_verdict 5,185 · confirmed_chargeback 1,415</td><td>Exclude (it reveals the label); useful for label-noise analysis</td></tr>
+      <tr><td>label_available_at</td><td>timestamptz</td><td>When the label becomes known</td><td>Always transaction_time + 60 days</td><td>Exclude; used to simulate label delay</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>same as transactions</td><td>Exclude</td></tr>
+      <tr><td>eligible_at_next_split_start</td><td>boolean</td><td>Was the label mature before the next split began?</td><td>False for 143,240 train and 141,900 validation rows</td><td>Exclude; filter on it for a strict historical backtest</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>features</h3><span>1,100,000 rows · 22 columns · engineered signals known at authorisation (FE-01…FE-10)</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>transaction_id</td><td>text PK/FK</td><td>Transaction scored</td><td>1:1</td><td>Key</td></tr>
+      <tr><td>feature_as_of</td><td>timestamptz</td><td>Point in time the features describe</td><td>Equals transaction_time in every row</td><td>Audit; shows no future data was used</td></tr>
+      <tr><td>amount_to_avg_ratio</td><td>double, nullable</td><td>FE-01: amount ÷ 90-day mean</td><td>0 – 32,318; median 0.75; null 2.6%</td><td>Input (cap or log); fraud p99 is 27.6 vs 10.2 for genuine</td></tr>
+      <tr><td>is_new_device</td><td>boolean, nullable</td><td>FE-02: device not seen for this payer in 90 days</td><td>Null when device is missing</td><td>Input; 9.8% of fraud vs 6.6% of genuine</td></tr>
+      <tr><td>customer_merchant_distance_km</td><td>double, nullable</td><td>FE-03: haversine payer↔merchant distance</td><td>0 – 2,429 km</td><td>Input (geo mismatch)</td></tr>
+      <tr><td>is_new_city</td><td>boolean, nullable</td><td>FE-03: city not seen in 90 days</td><td>Null when location is missing</td><td>Input</td></tr>
+      <tr><td>hour_of_day</td><td>integer</td><td>FE-04: IST hour</td><td>0–23 (no events at hour 5)</td><td>Input</td></tr>
+      <tr><td>is_night</td><td>boolean</td><td>FE-04: 00:00–05:00 IST</td><td>14.1% of rows</td><td>Input; fraud rate 2.72% at night vs 0.25% by day</td></tr>
+      <tr><td>has_recent_failures</td><td>boolean</td><td>FE-05: ≥ 3 failures in 24 h</td><td>True for 53.7% of fraud, 8.7% of genuine</td><td>Input (strong signal)</td></tr>
+      <tr><td>is_new_account</td><td>boolean</td><td>FE-06: account &lt; 30 days old</td><td>true/false</td><td>Input</td></tr>
+      <tr><td>txn_count_last_1h</td><td>integer</td><td>FE-07: prior attempts in the last hour</td><td>0 – 17</td><td>Input (velocity)</td></tr>
+      <tr><td>txn_amount_last_24h_paise</td><td>bigint</td><td>FE-07: prior amount in the last 24 h</td><td>0 – 799,880,298</td><td>Input (log-scaled)</td></tr>
+      <tr><td>distinct_customers_per_device_7d</td><td>integer, nullable</td><td>FE-09: other payers seen on this device in 7 days</td><td>0 – 8</td><td>Input (mule or shared-device signal)</td></tr>
+      <tr><td>combined_risk_flags</td><td>integer</td><td>FE-10: count of the device, geo, night, failure and new-account flags</td><td>0 – 4</td><td>Input; fraud rate rises from 0.12% (0 flags) to 4.5% (4 flags)</td></tr>
+      <tr><td>mcc_target_encoded_rate</td><td>double</td><td>FE-08: smoothed fraud rate of the merchant category</td><td>0.00003 – 0.0273</td><td>Input; fitted only on mature, earlier labels</td></tr>
+      <tr><td>mcc_encoding_as_of</td><td>timestamptz</td><td>When the encoder was fitted</td><td>Monthly folds; frozen at 2025-11-01 for validation and holdout</td><td>Audit (proves no leakage)</td></tr>
+      <tr><td>mcc_encoding_count</td><td>integer</td><td>Labelled rows behind the encoding</td><td>0 – 105,167</td><td>Optional input (reliability of the encoding)</td></tr>
+      <tr><td>missing_customer_location</td><td>boolean</td><td>Location unknown</td><td>3.0% true</td><td>Input (missingness flag)</td></tr>
+      <tr><td>missing_device</td><td>boolean</td><td>Device unknown</td><td>1.0% true</td><td>Input (missingness flag)</td></tr>
+      <tr><td>cold_start</td><td>boolean</td><td>Payer has no usable history</td><td>2.6% of genuine, 0.8% of fraud</td><td>Input; changes how much the history can be trusted</td></tr>
+      <tr><td>reason_codes</td><td>jsonb array</td><td>Triggered reason codes (R01_NEW_DEVICE, R02_GEO_MISMATCH, R05_AMOUNT_SPIKE, …)</td><td>140 distinct combinations, often empty</td><td>Grounds the explanation; derived from the flags above</td></tr>
+      <tr><td>feature_version</td><td>text</td><td>Feature pipeline version</td><td>sentinel-features-1.0.0</td><td>Audit and reproducibility</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>payment_outcomes</h3><span>1,100,000 rows · 5 columns · what happened after authorisation</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>transaction_id</td><td>text PK/FK</td><td>Attempt</td><td>1:1</td><td>Key</td></tr>
+      <tr><td>outcome_time</td><td>timestamptz</td><td>When the result arrived</td><td>Always after transaction_time</td><td>Lets features use only outcomes already received</td></tr>
+      <tr><td>status</td><td>text</td><td>Result of the attempt</td><td>SUCCESS 981,435 · FAILED 118,565</td><td><b>Exclude for the current transaction</b> (only known afterwards); past failures feed FE-05</td></tr>
+      <tr><td>failure_code</td><td>text, nullable</td><td>Why it failed</td><td>SIMULATED_AUTH_FAILURE; null when successful</td><td>Exclude for the current transaction</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>customers</h3><span>25,000 rows · 6 columns · payer master</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>customer_id</td><td>text PK</td><td>Hashed payer ID</td><td>25,000 (166 never transact)</td><td>Key</td></tr>
+      <tr><td>created_at</td><td>timestamptz</td><td>Account creation</td><td>2020-01-01 → 2026-02-27, at IST midnight</td><td>Source of account_age; no transaction happens before it</td></tr>
+      <tr><td>customer_age</td><td>integer</td><td>KYC age</td><td>18 – 80</td><td>Copied into transactions</td></tr>
+      <tr><td>home_city</td><td>text</td><td>Usual city</td><td>16 Indian cities</td><td>Baseline for geo-anomaly</td></tr>
+      <tr><td>region</td><td>text</td><td>Zone of home_city</td><td>north, south, east, west, central, northeast</td><td>Analytics and segmentation</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>merchants</h3><span>2,000 rows · 5 columns</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>merchant_id</td><td>text PK</td><td>Merchant reference</td><td>2,000</td><td>Key</td></tr>
+      <tr><td>synthetic_name</td><td>text</td><td>Placeholder name</td><td>"Synthetic Merchant 000000" … "001999"</td><td>Display only</td></tr>
+      <tr><td>merchant_category</td><td>text</td><td>MCC group</td><td>10 groups</td><td>Source for transaction category</td></tr>
+      <tr><td>merchant_location</td><td>jsonb</td><td>Registered city and lat/lon</td><td>16 cities</td><td>Source for distance</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>devices</h3><span>100,120 rows · 3 columns</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>device_id</td><td>text PK</td><td>Hashed fingerprint</td><td>100,120 (47% never used)</td><td>Key; also used by the blocklist rule</td></tr>
+      <tr><td>device_kind</td><td>text</td><td>Device type</td><td>mobile, browser</td><td>Possible input</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>decision_audit</h3><span>1,000,000 rows · 18 columns · what the (simulated) system decided</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>transaction_id</td><td>text PK/FK</td><td>Transaction scored</td><td>Main period only</td><td>Key</td></tr>
+      <tr><td>scored_at</td><td>timestamptz</td><td>Time of scoring</td><td>2025-01-01 → 2026-02-28</td><td>Audit</td></tr>
+      <tr><td>fraud_probability</td><td>numeric(7,6)</td><td>Score from a synthetic heuristic</td><td>0.0074 – 0.8801</td><td>Exclude; simulated and uncalibrated</td></tr>
+      <tr><td>decision</td><td>text</td><td>Business action</td><td>ALLOW 981,690 · REVIEW 11,644 · BLOCK 6,666</td><td>Exclude as an input; this is the output format SENTINEL must produce</td></tr>
+      <tr><td>risk_level</td><td>text</td><td>Band from the thresholds</td><td>LOW / MEDIUM (≥0.3) / HIGH (≥0.6) / CRITICAL (≥0.85)</td><td>Output format</td></tr>
+      <tr><td>reason_codes</td><td>jsonb</td><td>Codes behind the decision</td><td>81 combinations</td><td>Output format</td></tr>
+      <tr><td>explanation</td><td>text</td><td>Plain-language reason</td><td>e.g. "Account age is below 30 days."</td><td>Output format (OBJ-05)</td></tr>
+      <tr><td>decision_source</td><td>text</td><td>Who decided</td><td>MODEL or HARD_RULE (6,640 rule blocks)</td><td>Audit</td></tr>
+      <tr><td>model_version</td><td>text</td><td>Scoring model version</td><td>SYNTHETIC-HEURISTIC-NOT-A-MODEL</td><td>Audit</td></tr>
+      <tr><td>rules_version</td><td>text</td><td>Rule set version</td><td>synthetic-rules-1</td><td>Audit</td></tr>
+      <tr><td>latency_ms</td><td>integer</td><td>Score and decision time</td><td>20 – 220 ms (simulated)</td><td>Ops monitoring against OBJ-10 (≤ 250 ms p99)</td></tr>
+      <tr><td>explanation_latency_ms</td><td>integer</td><td>Explanation generation time</td><td>20 – 1,720 ms (simulated)</td><td>Ops monitoring</td></tr>
+      <tr><td>prompt_format</td><td>text</td><td>Serialisation format of the prompt</td><td>fmt-v1</td><td>Audit</td></tr>
+      <tr><td>prompt_hash</td><td>text</td><td>Hash of the exact prompt</td><td>SHA-style hex</td><td>Reproducibility</td></tr>
+      <tr><td>request</td><td>jsonb</td><td>Raw API request</td><td>Contains customer_id, device_id, location</td><td>Audit; personal data, so mask it</td></tr>
+      <tr><td>feature_vector</td><td>jsonb</td><td>Features as sent to the model</td><td>Mirrors the features table</td><td>Audit (train/serve consistency)</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>train / validation / holdout</td><td>Exclude</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>reviewer_feedback</h3><span>19,376 rows · 7 columns · human-in-the-loop corrections (MLOPS-08)</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>feedback_id</td><td>text PK</td><td>Feedback record</td><td>FB_TX_…</td><td>Key</td></tr>
+      <tr><td>transaction_id</td><td>text FK</td><td>Reviewed transaction</td><td>One review per transaction</td><td>Key</td></tr>
+      <tr><td>reviewed_at</td><td>timestamptz</td><td>Review time</td><td>2025-03 → 2026-04</td><td>Retraining-loop timing</td></tr>
+      <tr><td>verdict</td><td>text</td><td>Reviewer decision</td><td>FRAUD 4,844 · GENUINE 14,532</td><td><b>Exclude</b>: agrees with fraud_label 100% of the time</td></tr>
+      <tr><td>corrected_explanation</td><td>text</td><td>Reviewer's fixed explanation</td><td>64 distinct texts</td><td>Explanation fine-tuning signal</td></tr>
+      <tr><td>reviewer_id</td><td>text</td><td>Reviewer pseudonym</td><td>47 reviewers</td><td>Reviewer-consistency analysis</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>documents</h3><span>39,006 rows · 16 columns · unstructured knowledge for the LLM</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>document_id</td><td>text PK</td><td>Document reference</td><td>DOC_&lt;kind&gt;_…</td><td>Key</td></tr>
+      <tr><td>kind</td><td>text</td><td>Corpus type</td><td>investigator_notes 25,834 · chargeback_narratives 11,667 · regulatory_exercises 900 · playbooks 600 · guidelines 4 · rba_guides 1</td><td>Routes the document to the right training stage</td></tr>
+      <tr><td>title</td><td>text</td><td>Heading</td><td>Free text</td><td>Search and retrieval</td></tr>
+      <tr><td>transaction_id</td><td>text FK, nullable</td><td>Transaction discussed</td><td>Null 27.9%</td><td>Links a note to its case</td></tr>
+      <tr><td>legacy_case_id</td><td>text FK, nullable</td><td>Archive case discussed</td><td>Null 76.0%</td><td>Links to legacy_cases</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>train / validation / holdout</td><td>Leakage control</td></tr>
+      <tr><td>published_at</td><td>timestamptz</td><td>When the note was written</td><td>2021 → 2026; never before the label exists</td><td>Leakage control</td></tr>
+      <tr><td>content</td><td>text</td><td>Document body (Markdown)</td><td>~9.9M words in total</td><td>CPT corpus, retrieval</td></tr>
+      <tr><td>content_sha256</td><td>text</td><td>Content hash</td><td>Unique in every row</td><td>Exact deduplication</td></tr>
+      <tr><td>template_family</td><td>text</td><td>Generator template</td><td>488 families</td><td>Diversity analysis</td></tr>
+      <tr><td>cpt_eligible</td><td>boolean</td><td>Allowed in continued pre-training</td><td>26,864 true (train only)</td><td>Training filter</td></tr>
+      <tr><td>review_status</td><td>text</td><td>Human review state</td><td>synthetic_candidate_not_human_reviewed</td><td>Governance</td></tr>
+      <tr><td>storage_path</td><td>text</td><td>Object-store path</td><td>sentinel-…/corpus/…</td><td>Lineage</td></tr>
+      <tr><td>record_in_shard</td><td>integer</td><td>Position inside the shard file</td><td>1 – 3,149</td><td>Lineage</td></tr>
+      <tr><td>metadata</td><td>jsonb</td><td>Provenance details</td><td>{"provenance":"deterministic_s…"}</td><td>Lineage</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>document_chunks</h3><span>8 columns · documents split for search and embeddings</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>chunk_id</td><td>text PK</td><td>Chunk reference</td><td>—</td><td>Key</td></tr>
+      <tr><td>document_id</td><td>text FK</td><td>Parent document</td><td>FK to documents</td><td>Key</td></tr>
+      <tr><td>chunk_index</td><td>integer</td><td>Order inside the document</td><td>0, 1, 2…</td><td>Reassembly</td></tr>
+      <tr><td>content</td><td>text</td><td>Chunk text</td><td>—</td><td>Retrieval (RAG) and future embeddings</td></tr>
+      <tr><td>word_count</td><td>integer</td><td>Chunk length</td><td>—</td><td>Token budgeting</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>train / validation / holdout</td><td>Leakage control</td></tr>
+      <tr><td>cpt_eligible</td><td>boolean</td><td>Allowed in CPT</td><td>inherited from document</td><td>Training filter</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>legacy_cases</h3><span>2,000 rows · 9 columns · closed investigations, 2021–2024</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>legacy_case_id</td><td>text PK</td><td>Case reference</td><td>LEGACY_0000001 – 0002000</td><td>Key; linked from documents</td></tr>
+      <tr><td>customer_id</td><td>text FK</td><td>Payer in the case</td><td>FK to customers</td><td>Key</td></tr>
+      <tr><td>transaction_time</td><td>timestamptz</td><td>When the incident happened</td><td>2021-01 → 2024-04</td><td>Timeline</td></tr>
+      <tr><td>closed_at</td><td>timestamptz</td><td>Case closure</td><td>2021-03 → 2024-06</td><td>Investigation duration</td></tr>
+      <tr><td>amount_paise</td><td>bigint</td><td>Amount involved</td><td>5,949 – 2,998,399</td><td>Context</td></tr>
+      <tr><td>payment_channel</td><td>text</td><td>Rail</td><td>4 channels</td><td>Context</td></tr>
+      <tr><td>fraud_label</td><td>smallint</td><td>Case outcome</td><td>0/1</td><td>Label for historical narratives</td></tr>
+      <tr><td>evidence</td><td>jsonb</td><td>Reason codes and source</td><td>{"reason_codes":[…],"source":…}</td><td>Explanation grounding</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>gold_explanations</h3><span>8,500 rows · 8 columns · SFT and evaluation targets</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>example_id</td><td>text PK</td><td>Example reference</td><td>GOLD_TX_…</td><td>Key</td></tr>
+      <tr><td>transaction_id</td><td>text FK</td><td>Source transaction</td><td>Each in one split only</td><td>Key</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>train 8,000 · holdout 500 (blind evaluation)</td><td>The 500 are evaluation-only (OBJ-05)</td></tr>
+      <tr><td>prompt</td><td>text</td><td>Serialised transaction and history</td><td>"[TXN] id=… amt=…"</td><td>Model input text</td></tr>
+      <tr><td>target</td><td>text (JSON)</td><td>Ideal JSON answer with reason codes and explanation</td><td>Only 59 distinct targets</td><td>SFT target</td></tr>
+      <tr><td>fraud_label</td><td>smallint</td><td>Truth for the example</td><td>0/1</td><td>Evaluation</td></tr>
+      <tr><td>review_status</td><td>text</td><td>Human review state</td><td>not human reviewed</td><td>Governance</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>preference_pairs</h3><span>5,000 rows · 9 columns · DPO preference tuning</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td>pair_id</td><td>text PK</td><td>Pair reference</td><td>DPO_TX_…</td><td>Key</td></tr>
+      <tr><td>transaction_id</td><td>text FK</td><td>Source transaction</td><td>train only</td><td>Key</td></tr>
+      <tr><td>split</td><td>text</td><td>Partition</td><td>train</td><td>Leakage control</td></tr>
+      <tr><td>prompt</td><td>text</td><td>Model input</td><td>serialised transaction</td><td>DPO prompt</td></tr>
+      <tr><td>chosen</td><td>text (JSON)</td><td>Preferred, factually grounded answer</td><td>54 distinct</td><td>DPO positive</td></tr>
+      <tr><td>rejected</td><td>text (JSON)</td><td>Worse answer</td><td>197 distinct</td><td>DPO negative</td></tr>
+      <tr><td>rejection_reason</td><td>text</td><td>Why it is worse</td><td>"unsupported fact absent from prompt" (single value)</td><td>Teaches the model not to hallucinate</td></tr>
+      <tr><td>review_status</td><td>text</td><td>Human review state</td><td>not human reviewed</td><td>Governance</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tname"><h3>Policy and configuration tables</h3><span>the rules layer that turns probability into a decision</span></div>
+  <div class="tbl"><table class="dict">
+    <thead><tr><th>Attribute</th><th>Type</th><th>Business meaning</th><th>Values / range</th><th>SENTINEL role and relationships</th></tr></thead>
+    <tbody>
+      <tr><td colspan="5"><b>threshold_sets</b> · 1 row · 8 columns</td></tr>
+      <tr><td>threshold_id</td><td>text PK</td><td>Threshold set</td><td>THR_DEFAULT_V1</td><td>Policy key</td></tr>
+      <tr><td>version</td><td>integer</td><td>Version</td><td>1</td><td>Change control</td></tr>
+      <tr><td>mcc_group</td><td>text, nullable</td><td>Category-specific override</td><td>null (global set only)</td><td>Future per-MCC tuning</td></tr>
+      <tr><td>medium_from</td><td>numeric</td><td>Probability where MEDIUM starts</td><td>0.30</td><td>Policy</td></tr>
+      <tr><td>high_from</td><td>numeric</td><td>Probability where HIGH / REVIEW starts</td><td>0.60</td><td>Policy</td></tr>
+      <tr><td>critical_from</td><td>numeric</td><td>Probability where CRITICAL / BLOCK starts</td><td>0.85</td><td>Policy</td></tr>
+      <tr><td>status</td><td>text</td><td>Lifecycle state</td><td>active_synthetic</td><td>Policy</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+      <tr><td colspan="5"><b>hard_rules</b> · 2 rows · 7 columns</td></tr>
+      <tr><td>rule_id</td><td>text PK</td><td>Rule reference</td><td>HR_BLOCKLIST_DEVICE, HR_ALLOWLIST_CUSTOMER</td><td>Policy key</td></tr>
+      <tr><td>code</td><td>text</td><td>Rule code used in audit</td><td>same as rule_id</td><td>Audit</td></tr>
+      <tr><td>expression</td><td>jsonb</td><td>Condition</td><td>{"field":"device_id","operator":…}</td><td>Rules engine</td></tr>
+      <tr><td>action</td><td>text</td><td>What the rule does</td><td>BLOCK, CAP_AT_REVIEW</td><td>Overrides the model</td></tr>
+      <tr><td>priority</td><td>integer</td><td>Evaluation order</td><td>10, 100</td><td>Conflict resolution</td></tr>
+      <tr><td>enabled</td><td>boolean</td><td>Active?</td><td>true</td><td>Kill switch</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+      <tr><td colspan="5"><b>list_entries</b> · ~130 rows · 6 columns</td></tr>
+      <tr><td>entry_id</td><td>text PK</td><td>Entry reference</td><td>blocked_devices_9 …</td><td>Key</td></tr>
+      <tr><td>list_type</td><td>text</td><td>Which list</td><td>blocked_devices, allowlisted_customers</td><td>Used by hard rules</td></tr>
+      <tr><td>entity_id</td><td>text</td><td>Listed device or customer</td><td>D_… / C_…</td><td>Joins to devices or customers</td></tr>
+      <tr><td>effective_from</td><td>timestamptz</td><td>Start date</td><td>2025-01-01</td><td>Time-valid policy</td></tr>
+      <tr><td>reason</td><td>text</td><td>Why listed</td><td>"fictional seeded policy fixture"</td><td>Audit</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+      <tr><td colspan="5"><b>config_changes</b> · 9 columns · audit trail of policy edits</td></tr>
+      <tr><td>change_id</td><td>text PK</td><td>Change reference</td><td>—</td><td>Key</td></tr>
+      <tr><td>entity</td><td>text</td><td>What changed (threshold, rule, list)</td><td>—</td><td>Audit</td></tr>
+      <tr><td>entity_id</td><td>text</td><td>Which item</td><td>—</td><td>Audit</td></tr>
+      <tr><td>before_value</td><td>jsonb, nullable</td><td>Old value (null when created)</td><td>—</td><td>Audit and rollback</td></tr>
+      <tr><td>after_value</td><td>jsonb</td><td>New value</td><td>—</td><td>Audit</td></tr>
+      <tr><td>changed_by</td><td>text</td><td>Who made the change</td><td>—</td><td>Accountability</td></tr>
+      <tr><td>changed_at</td><td>timestamptz</td><td>When</td><td>—</td><td>Audit</td></tr>
+      <tr><td>reason</td><td>text</td><td>Why</td><td>—</td><td>Audit</td></tr>
+      <tr><td>is_synthetic</td><td>boolean</td><td>Synthetic marker</td><td>true</td><td>Exclude</td></tr>
+    </tbody>
+  </table></div>
+  <p>Other folders that aren't relational tables: <code>histories/</code> (each payer's last 20 events serialised as text, per split), <code>training/</code> (CPT, SFT, gold, DPO and prompt-format comparison files), <code>evaluation/explanations</code> (the 500-case blind pack), <code>ground_truth/simulator</code> (scenario IDs, never model inputs), and <code>parquet/transactions</code> (the 14 CRD fields in Parquet).</p>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="business">
+  <h2><span class="num">3</span>Business mapping</h2>
+
+  <h3>Why a real organisation collects this data</h3>
+  <ul>
+    <li><b>To stop losses:</b> chargebacks and write-offs hit ₹3.6 crore last quarter. Each confirmed fraud label is money the business either lost or saved.</li>
+    <li><b>To stop blocking good customers:</b> every false decline is a lost sale and an unhappy merchant. The labels and decisions show how often the current system gets it wrong.</li>
+    <li><b>For regulation and audit:</b> RBI, PCI DSS and the DPDP Act expect PayVista to be able to show why it blocked a payment and who changed a rule. That is what <code>decision_audit</code> and <code>config_changes</code> record.</li>
+    <li><b>To reuse its own knowledge:</b> five years of investigator notes and chargeback narratives are expertise no rules engine can use.</li>
+  </ul>
+
+  <h3>Client requirement → data</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Requirement</th><th>What the client asked for</th><th>Where it lives in the data</th></tr></thead>
+    <tbody>
+      <tr><td>CRD 7.1</td><td>14-field labelled transaction table</td><td><code>transactions</code> + <code>labels</code>; <code>parquet/transactions</code></td></tr>
+      <tr><td>CRD 7.2</td><td>~3% missing location, missing UPI devices, rare &gt; ₹10 lakh, 1:165 imbalance, Jan–Feb 2026 holdout</td><td>All reproduced: 3.0%, UPI-only device nulls, 349 rows above ₹10 lakh, 0.60%, holdout split</td></tr>
+      <tr><td>CRD 7.3</td><td>Histories, case notes, chargebacks, playbooks, RBI/NPCI material, gold and DPO examples</td><td><code>histories/</code>, <code>documents</code>, <code>legacy_cases</code>, <code>training/</code> (regulatory material is a synthetic stand-in)</td></tr>
+      <tr><td>FE-01…FE-10</td><td>Point-in-time behavioural features</td><td><code>features</code> + <code>feature_catalogue.json</code></td></tr>
+      <tr><td>OBJ-01…04</td><td>Recall ≥ 85%, BLOCK precision ≥ 70%, PR-AUC ≥ 0.80, beat XGBoost by +0.03</td><td><code>fraud_label</code> on the holdout split</td></tr>
+      <tr><td>OBJ-05/06</td><td>≥ 90% correct explanations, 100% valid JSON</td><td>500-case gold holdout; JSON targets in gold and DPO</td></tr>
+      <tr><td>OBJ-09/10</td><td>≤ 12,000 reviews a day; ≤ 250 ms p99</td><td><code>decision_audit.decision</code>, <code>latency_ms</code> (simulated)</td></tr>
+      <tr><td>LLD-3</td><td>Configurable, audited rules</td><td><code>threshold_sets</code>, <code>hard_rules</code>, <code>list_entries</code>, <code>config_changes</code></td></tr>
+      <tr><td>MLOPS-08</td><td>Learn from reviewer verdicts</td><td><code>reviewer_feedback</code></td></tr>
+      <tr><td>DR-01…03</td><td>No identifiers, fenced holdout, deduplicated corpus</td><td>Hashed IDs, split-separated files, <code>content_sha256</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Insights, patterns and anomalies we found</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Signal</th><th>Fraud rate when true</th><th>Fraud rate otherwise</th><th>Lift</th></tr></thead>
+    <tbody>
+      <tr><td>Night (00:00–05:00 IST)</td><td class="n">2.72%</td><td class="n">0.25%</td><td class="n">≈ 11×</td></tr>
+      <tr><td>Payment attempt failed</td><td class="n">3.13%</td><td class="n">0.29%</td><td class="n">≈ 11×</td></tr>
+      <tr><td>Device shared by several payers</td><td class="n">3.60%</td><td class="n">0.40%</td><td class="n">≈ 9×</td></tr>
+      <tr><td>4 risk flags together vs none</td><td class="n">4.48%</td><td class="n">0.12%</td><td class="n">≈ 36×</td></tr>
+      <tr><td>Payment channel (any)</td><td class="n" colspan="2">≈ 0.60% on every channel</td><td class="n">none</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>This matches what the investigators told us in CRD 3.3: <b>amount alone is weak, but context is strong</b>. The median fraud amount is ₹1,498 against ₹1,250 for genuine payments, almost the same. Combine night + failures + new device and the risk rises sharply.</li>
+    <li>Several of the most-shared devices (up to 108 payers each) are on the blocklist. Mule and shared-device networks are a real pattern here.</li>
+    <li>Fraud is a rare event: 1 in about 167 transactions. Accuracy is meaningless as a metric, so PR-AUC and recall are the right measures.</li>
+  </ul>
+
+  <h3>Better decisions this enables</h3>
+  <ul>
+    <li>Tune ALLOW / REVIEW / BLOCK thresholds by measuring the false-decline cost against the fraud cost.</li>
+    <li>Send the review team fewer and better cases, each with its reasons attached.</li>
+    <li>Give support staff a sentence to tell the customer instead of "declined".</li>
+    <li>Change policy in minutes through versioned thresholds and lists instead of 10–15 day rule releases.</li>
+  </ul>
+
+  <h3>Attributes that matter most</h3>
+  <p>The behavioural and context signals: <code>is_night</code> / <code>hour_of_day</code>, <code>failed_transactions</code> / <code>has_recent_failures</code>, <code>is_new_device</code>, <code>distinct_customers_per_device_7d</code>, <code>amount_to_avg_ratio</code>, <code>is_new_city</code> / distance, <code>account_age</code>, velocity (<code>txn_count_last_1h</code>, <code>txn_amount_last_24h_paise</code>), <code>combined_risk_flags</code>, and the target <code>fraud_label</code>.</p>
+  <p>For the LLM, the serialised history plus investigator notes matter as much as any single column.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="quality">
+  <h2><span class="num">4</span>Data quality observations</h2>
+  <p>We profiled all rows (not a sample) with DuckDB. Severity: <span class="pill p-bad">HIGH</span> affects the model or design, <span class="pill p-warn">MEDIUM</span> needs handling, <span class="pill p-ok">OK</span> is verified clean.</p>
+
+  <h3>Missing and null values</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Field</th><th>Null rate</th><th>Pattern</th><th>Treatment</th></tr></thead>
+    <tbody>
+      <tr><td>customer_location</td><td class="n">3.0% (33,067)</td><td>All channels; fraud rate 0.61% vs 0.60%</td><td>Keep null and add a flag; never fill with the home city</td></tr>
+      <tr><td>device_id</td><td class="n">1.0% (10,683)</td><td><b>Only UPI</b> (older UPI rows, as the CRD warns)</td><td>Flag; "unknown" must never count as "new device"</td></tr>
+      <tr><td>average_transaction_value</td><td class="n">2.6% (28,325)</td><td>Payer has no 90-day history</td><td>Use <code>cold_start</code>; don't fill with 0</td></tr>
+      <tr><td>failure_code</td><td class="n">89.2%</td><td>Empty because the payment succeeded</td><td>Structural, not a defect</td></tr>
+      <tr><td>documents.transaction_id / legacy_case_id</td><td class="n">27.9% / 76.0%</td><td>A document links to a transaction, a case, or neither</td><td>Loader must handle all three</td></tr>
+      <tr><td>threshold_sets.mcc_group</td><td class="n">100%</td><td>Only a global threshold exists</td><td>Expected for now</td></tr>
+    </tbody>
+  </table></div>
+  <p>Missing values carry almost no fraud signal (0.66% vs 0.60% for missing device). A flag plus a neutral default is safe, and dropping the rows isn't needed.</p>
+
+  <h3>Duplicates</h3>
+  <ul>
+    <li><span class="pill p-ok">OK</span> No duplicate keys in any table. No duplicate natural keys (customer + merchant + amount + time). No duplicate document hashes.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <b>Template repetition in the text.</b> The 39,006 documents reduce to 30,902 template fingerprints. The 8,500 gold examples have only <b>59 distinct targets</b>, and all DPO pairs share one rejection reason. Near-duplicate removal by meaning is "not certified". The LLM could learn to copy templates instead of reasoning.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <b>Stray extracted files.</b> Some parts were unzipped next to their originals (e.g. <code>customers/all/part-00003.csv/</code>, <code>devices/all/part-00021.csv.zip</code>). A loader using <code>*.csv*</code> would load those rows twice. Load only <code>*.csv.gz</code> and check against <code>manifest.json</code>.</li>
+  </ul>
+
+  <h3>Data types and consistency</h3>
+  <ul>
+    <li><span class="pill p-ok">OK</span> <code>amount_paise</code> equals <code>transaction_amount × 100</code> in every row. Paise (integer) is the authoritative value, which avoids rounding errors.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <b>Timezone.</b> The CRD describes timestamps as IST, but they are stored in UTC. Night flags, splits and account creation (18:30 UTC = IST midnight) all depend on converting correctly. Do this in one shared function.</li>
+    <li><span class="pill p-warn">MEDIUM</span> Locations, reason codes and rule expressions are JSON stored as text in the CSVs. They need a fixed schema and parsing.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <b>Window definitions live in different places.</b> <code>previous_transactions</code> (30 days), <code>average_transaction_value</code> (90 days) and <code>failed_transactions</code> (24 h) are defined only in the CRD, not in <code>feature_catalogue.json</code>. Their windows differ, so a row can have <code>previous_transactions = 0</code> and still have an average, which is correct. A pipeline that recomputes counts from full history would disagree with 92% of rows. Write all windows into one feature spec.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <code>customer_age</code> is copied from the customer table and never changes over 17 months.</li>
+  </ul>
+
+  <h3>Outliers and unusual values</h3>
+  <ul>
+    <li><span class="pill p-warn">MEDIUM</span> <b>Amounts:</b> median ₹1,251, p99 ₹25,474, maximum ₹79.9 lakh. 349 rows are above ₹10 lakh. Use a log scale; don't delete them, because the CRD calls them rare but real.</li>
+    <li><span class="pill p-bad">HIGH</span> <b>UPI is unrealistic:</b> 830 UPI payments are above ₹1 lakh and 205 above ₹10 lakh, beyond normal UPI per-transaction limits. Add channel-specific validation.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <code>amount_to_avg_ratio</code> reaches 32,318 (284 rows above 1,000×). Cap or log it.</li>
+    <li><span class="pill p-ok">SIGNAL</span> 120 devices are used by more than one payer, the top ones by about 100 payers. These are fraud rings or mules, not noise. Keep them.</li>
+    <li><span class="pill p-bad">HIGH</span> <b>Time artefact:</b> there are <b>zero transactions between 05:00 and 05:59 IST</b>, and night hours carry about 60% of daytime volume. Real traffic will look different, so time-based patterns may not carry over to production.</li>
+  </ul>
+
+  <h3>Relationships verified</h3>
+  <p><span class="pill p-ok">OK</span> No orphan foreign keys. Exactly one label, feature row and outcome per transaction. Transaction category and location always match the merchant. <code>account_age</code> always equals the days since <code>created_at</code>. 166 customers and 47% of devices have no transactions, which is fine for master data. The payer's city differs from their home city in 15.6% of transactions, so travel is normal and "new city" needs context.</p>
+
+  <h3>Validation rules (all pass, 0 violations)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Rule</th><th>Check</th></tr></thead>
+    <tbody>
+      <tr><td>money_mismatch</td><td>amount_paise = transaction_amount × 100</td></tr>
+      <tr><td>label_delay</td><td>label_available_at = transaction_time + 60 days</td></tr>
+      <tr><td>feature_timestamp</td><td>feature_as_of = transaction_time, and the encoder was fitted before the transaction</td></tr>
+      <tr><td>account_creation</td><td>no transaction before the account existed</td></tr>
+      <tr><td>outcome_timing</td><td>outcome arrives after the attempt</td></tr>
+      <tr><td>unknown_as_new</td><td>a missing device or location is never flagged as "new"</td></tr>
+      <tr><td>validation_encoder_frozen</td><td>validation and holdout use the 1 Nov 2025 encoder</td></tr>
+      <tr><td>document_before_label</td><td>no note is published before its label exists</td></tr>
+      <tr><td>cpt / preference leakage</td><td>CPT and DPO data come from train only</td></tr>
+      <tr><td>schema CHECKs</td><td>amount &gt; 0, age 18–120, account_age ≥ 0, label ∈ {0,1}, split ∈ 4 values</td></tr>
+    </tbody>
+  </table></div>
+  <p>Rules we propose adding: channel amount limits (UPI), lat/lon inside India, <code>failed_transactions ≤ txn_count</code> windows, a reason-code whitelist, row counts checked against <code>manifest.json</code>, and JSON schema validation of model outputs (OBJ-06).</p>
+
+  <h3>Leakage risks <span class="pill p-bad">HIGH</span></h3>
+  <p>These columns must never be model inputs:</p>
+  <ul>
+    <li><code>reviewer_feedback.verdict</code>, which agrees with the label in 100% of 19,376 rows.</li>
+    <li><code>decision_audit</code> probability, decision and risk level.</li>
+    <li>The current transaction's <code>payment_outcomes.status</code>.</li>
+    <li><code>label_source</code>, <code>label_available_at</code> and <code>eligible_at_next_split_start</code>.</li>
+    <li><code>split</code>, IDs, and the scenario IDs in <code>ground_truth</code>.</li>
+  </ul>
+
+  <h3>Class imbalance and label maturity <span class="pill p-bad">HIGH</span></h3>
+  <p>Only 0.6% of rows are fraud. Of the 144,803 validation rows, <b>only 2,903 (26 frauds) have mature labels</b> before the holdout begins. Probabilities can't be calibrated on 26 positives, so calibration needs a longer history window.</p>
+
+  <h3>Privacy and security</h3>
+  <ul>
+    <li><span class="pill p-ok">OK</span> Every row is synthetic, IDs are hashed, and merchant names are placeholders.</li>
+    <li><span class="pill p-ok">OK</span> We scanned <b>all 39,006 documents</b> (the shipped audit covered only 1,000). There were 0 matches for email, Indian mobile numbers, PAN, Aadhaar, card numbers, UPI VPAs or raw customer/device IDs.</li>
+    <li><span class="pill p-warn">MEDIUM</span> <code>decision_audit.request</code> stores customer ID, device ID and exact location. In production these are pseudonymous personal data under the DPDP Act 2023. They need masking, role-based access and a retention period.</li>
+    <li><span class="pill p-warn">MEDIUM</span> Open gaps:
+      <ul>
+        <li>No human PII audit has been done.</li>
+        <li>The regulatory documents are invented teaching scenarios, not real RBI/NPCI circulars.</li>
+        <li>The Supabase demo doesn't provide the CRD's AWS data residency or immutable (Object Lock) audit storage.</li>
+        <li>Data must never leave PayVista's account, which rules out third-party AI APIs.</li>
+      </ul></li>
+  </ul>
+
+  <div class="callout"><b>Impact summary.</b>
+    <ul>
+      <li><b>Design:</b> paise-only money, one IST conversion, typed JSON, a <code>.gz</code>-only loader checked against the manifest, and a masked, access-controlled audit store.</li>
+      <li><b>Training:</b> drop the leakage columns, scale outliers, handle the imbalance, calibrate on more history, and deduplicate templates.</li>
+      <li><b>Analytics:</b> don't quote volume, hourly trends, scores or latencies, which are all simulated.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="ai">
+  <h2><span class="num">5</span>AI/ML opportunities</h2>
+
+  <div class="cols">
+    <div><b>Prediction targets</b>
+      <ul>
+        <li><code>fraud_label</code>: main binary target</li>
+        <li>Decision (ALLOW / REVIEW / BLOCK): derived from the probability and thresholds</li>
+        <li>Reason codes + explanation: generated JSON output</li>
+      </ul></div>
+    <div><b>Model inputs</b>
+      <ul>
+        <li>Transaction: amount, channel, category, time, account age, 30-day count, 90-day average, 24-h failures, customer age</li>
+        <li>All FE-01…FE-10 features plus the missingness flags</li>
+        <li>Serialised 20-event history and retrieved investigator knowledge (for the LLM)</li>
+      </ul></div>
+    <div><b>Never inputs</b>
+      <ul>
+        <li>IDs, split, label metadata, reviewer verdicts, simulated decisions and scores, current outcome status, scenario IDs</li>
+      </ul></div>
+  </div>
+
+  <h3>Preprocessing steps</h3>
+  <ol>
+    <li>Load only <code>.csv.gz</code> or Parquet files; check row counts and SHA values against <code>manifest.json</code>.</li>
+    <li>Convert UTC to IST in one place; parse JSON columns into typed fields.</li>
+    <li>Use paise everywhere; apply log1p to amount, the ratio and 24-h totals, and cap extreme ratios.</li>
+    <li>Keep nulls as nulls and add missingness flags; never treat unknown as new.</li>
+    <li>Split by time only (never randomly); respect the 60-day label delay; filter <code>eligible_at_next_split_start</code> for strict backtests.</li>
+    <li>Handle the 0.6% imbalance with class weights or focal loss; keep negative downsampling on the training data only.</li>
+    <li>Serialise each transaction and its history into the fixed <code>fmt-v1</code> prompt within the 1,024-token budget.</li>
+  </ol>
+
+  <h3>Feature engineering opportunities</h3>
+  <ul>
+    <li>Behaviour versus the payer's own normal: amount z-score, usual hours, usual merchants and cities.</li>
+    <li>Velocity: attempts in 10 min, 1 h and 24 h; failure-then-success bursts.</li>
+    <li>Graph features (Phase 2 in the CRD): device ↔ customer links, shared-device clusters and ring detection.</li>
+    <li>Interactions: night × new device × failures, matching the investigator's "₹50,000 at 3 AM" example.</li>
+    <li>Merchant risk over time: rolling category and merchant fraud rates using only mature labels.</li>
+    <li>Time since the last transaction and since the last device or city change.</li>
+  </ul>
+
+  <h3>Relevant ML and AI approaches</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Approach</th><th>Use in SENTINEL</th><th>Data used</th></tr></thead>
+    <tbody>
+      <tr><td>XGBoost / LightGBM baseline</td><td>Required benchmark (OBJ-04)</td><td>transactions + features</td></tr>
+      <tr><td>Continued pre-training (CPT)</td><td>Teach the LLM the language of fraud investigation</td><td>26,864 CPT-eligible documents (~9.5M tokens)</td></tr>
+      <tr><td>Supervised fine-tuning (SFT)</td><td>Output the probability, decision and JSON explanation</td><td>histories + gold targets</td></tr>
+      <tr><td>Preference tuning (DPO)</td><td>Prefer grounded answers; avoid made-up facts</td><td>5,000 preference pairs</td></tr>
+      <tr><td>Probability calibration</td><td>Turn scores into trustworthy probabilities for thresholds</td><td>mature validation labels (needs a longer window)</td></tr>
+      <tr><td>Retrieval (RAG)</td><td>Pull relevant playbook or case text into explanations</td><td>document_chunks</td></tr>
+      <tr><td>Anomaly detection and graph ML</td><td>Find rings and new patterns that labels don't cover yet</td><td>devices, shared-device links</td></tr>
+      <tr><td>Distillation and quantisation</td><td>Meet 250 ms p99 and ₹4 per 1,000 transactions</td><td>Same training data</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Real-time vs batch</h3>
+  <div class="cols">
+    <div><b>Real-time (per authorisation, ≤ 250 ms)</b>
+      <ul>
+        <li>Online feature store holds velocity counters, last-90-day device and city sets, and the 24-h failure count.</li>
+        <li>Features are read <i>before</i> the current event is applied, exactly as <code>feature_as_of</code> shows.</li>
+        <li>Model score → threshold → hard rules → decision → audit log row.</li>
+        <li>If the model is down, the rules act as the fallback.</li>
+      </ul></div>
+    <div><b>Batch (daily, weekly, monthly)</b>
+      <ul>
+        <li>Label maturation after 60 days; monthly refresh of the MCC encoder.</li>
+        <li>Retraining with reviewer feedback; drift monitoring on feature distributions.</li>
+        <li>Threshold tuning and back-testing; corpus deduplication and embedding generation.</li>
+        <li>Dashboards: fraud bps, false-decline rate, review-queue size.</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="notes">
+  <h2><span class="num">6</span>Discussion notes</h2>
+
+  <h3>Key observations</h3>
+  <ul>
+    <li>The dataset matches the CRD's shape: payment mix 58 / 31 / 7 / 4, a 0.6% fraud rate, 3% missing location, UPI-only missing devices and rare large amounts.</li>
+    <li>Context beats amount: night, recent failures and shared devices each raise the fraud rate about 10×.</li>
+    <li>The data is built to prevent leakage: point-in-time features, a frozen encoder, a 60-day label delay and a fenced holdout. All ten built-in checks pass.</li>
+    <li>The text corpus is large but repetitive, and nothing in it has been reviewed by a human.</li>
+  </ul>
+
+  <h3>Decisions taken by the pod</h3>
+  <ul>
+    <li>Paise is the single money field, and all time logic runs in IST.</li>
+    <li>Splits are by time only, and the holdout is never touched before acceptance.</li>
+    <li>Nulls stay null and get flags; extreme amounts are kept and log-scaled.</li>
+    <li>The leakage columns listed in Section 4 are excluded from every model input.</li>
+    <li>PR-AUC and recall are the primary metrics; accuracy is not reported.</li>
+  </ul>
+
+  <h3>Assumptions</h3>
+  <ul>
+    <li>The synthetic distributions are close enough to production for design work, but not for accuracy claims.</li>
+    <li>Labels are final 60 days after the transaction, and a label of 0 means "mature, no fraud reported".</li>
+    <li>Hashed IDs are stable over time (the same payer always gets the same hash).</li>
+  </ul>
+
+  <h3>Open questions for the client</h3>
+  <ol>
+    <li>Are the previous_transactions (30 days) and average_transaction_value (90 days) windows final? Can they be added to the feature catalogue?</li>
+    <li>What are the per-channel amount limits, especially for UPI above ₹1 lakh?</li>
+    <li>Can the calibration window be extended, given only 26 mature fraud cases in validation?</li>
+    <li>Will real RBI/NPCI circulars and human-reviewed gold and DPO examples be provided?</li>
+    <li>What is the retention period and the access policy for audit logs that hold IDs and location?</li>
+    <li>Is the missing 05:00 hour a generator artefact, or a real maintenance window?</li>
+  </ol>
+
+  <h3>Learnings</h3>
+  <ul>
+    <li>Understanding <i>when</i> each value becomes known matters as much as knowing what it means. Most of the leakage traps here are about time.</li>
+    <li>A column can be perfectly predictive and still be useless. The reviewer verdict is the label in disguise.</li>
+    <li>Missing data isn't automatically bad. Here it is uninformative, and the flags handle it.</li>
+    <li>Business context (CRD 3.3) told us which features to look at before the numbers confirmed it.</li>
+  </ul>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="contrib">
+  <h2><span class="num">7</span>Individual contributions</h2>
+  <p>We split the tables among the pod for the first pass. Each member then presented their attributes to the whole pod on 17 October.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Member</th><th>Area explored</th><th>Explained to the pod</th></tr></thead>
+    <tbody>
+      <tr><td>Shubham Thanage</td><td>Full-dataset profiling; data quality and relationships (Section 4); consolidation of this report</td><td>Null patterns, duplicates, outliers, leakage, validation rules, privacy</td></tr>
+      <tr><td>[Member 2]</td><td>transactions, customers, merchants, devices</td><td>Core record, CRD 7.1 fields, payment mix</td></tr>
+      <tr><td>[Member 3]</td><td>features, labels, payment_outcomes</td><td>FE-01…FE-10, label delay, splits</td></tr>
+      <tr><td>[Member 4]</td><td>decision_audit, policy tables, reviewer_feedback</td><td>Rules layer, thresholds, audit trail</td></tr>
+      <tr><td>[Member 5]</td><td>documents, chunks, legacy cases, gold, DPO</td><td>LLM corpus, training stages</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  All figures were computed from the full <code>sentinel_data</code> tables (DuckDB, every row). Client facts are from CRD PV-RISK-CRD-2026-014. The dataset is synthetic. Scores, decisions and latencies in it are simulated and are not model performance.
+</footer>
+</div>
